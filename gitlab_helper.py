@@ -1,4 +1,8 @@
+import os
 import gitlab
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_gitlab_merge_request(destination_repo_url: str, branch_name: str) -> str:
     """
@@ -12,12 +16,12 @@ def create_gitlab_merge_request(destination_repo_url: str, branch_name: str) -> 
         str: The URL of the created merge request.
 
     """
-
     private_token = os.environ.get('GITLAB_PRIVATE_TOKEN')
     if not private_token:
+        logger.error("GitLab private token not found in environmental variables.")
         raise ValueError("GitLab private token not found in environmental variables.")
-
-    gl = gitlab.Gitlab('https://gitlab.com', private_token=orivate_token)
+    
+    gl = gitlab.Gitlab('https://gitlab.com', private_token=private_token)
     project_id = destination_repo_url.split('/')[-2]  # Extract project ID from URL
     project = gl.projects.get(project_id)
     merge_request = project.mergerequests.create({
@@ -26,5 +30,6 @@ def create_gitlab_merge_request(destination_repo_url: str, branch_name: str) -> 
         'title': f'Merge {branch_name}',
         'description': f'Merge request for branch: {branch_name}',
     })
+    logger.info(f"Merge request created in GitLab: {merge_request.web_url}")
     return merge_request.web_url
 
