@@ -4,6 +4,7 @@ import time
 import logging
 from gitlab_helper import create_gitlab_merge_request
 from gitea_helper import create_gitea_pull_request
+from github_helper import create_github_pull_request
 
 # Get the log level from the environmental variable or set it to INFO by default
 log_level = os.environ.get('LOG_LEVEL', 'INFO')
@@ -58,9 +59,15 @@ def create_merge_request(source_repo_url: str, destination_repo_url: str, destin
                 logger.info(f"Pull request created in Gitea: {pull_request_url}")
             else:
                 logger.error("Failed to create pull request in Gitea.")
+        elif 'github' in destination_repo_url:
+            logger.info("Creating pull request in GitHub...")
+            pull_request_url = create_github_pull_request(destination_repo_url, branch_name)
+            if pull_request_url:
+                logger.info(f"Pull request created in GitHub: {pull_request_url}")
+            else:
+                logger.error("Failed to create pull request in GitHub.")
         else:
             logger.error("Unsupported destination repository platform.")
-
     else:
         logger.info("The last commits are the same. No merge request necessary.")
 
@@ -73,4 +80,3 @@ if __name__ == '__main__':
     logger.info("Running the main script...")
     create_merge_request(source_url, destination_gitlab_url, destination_path)
     create_merge_request(source_url, destination_gitea_url, destination_path)
-
